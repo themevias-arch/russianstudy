@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rus Alfabesi Pratik</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .card {
+            background-color: #1e293b;
+            padding: 35px 25px;
+            border-radius: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            max-width: 440px;
+            width: 100%;
+            border: 1px solid #334155;
+            position: relative;
+        }
+
+        .mode-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #334155;
+            color: #94a3b8;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .cyrillic-display {
+            font-size: 5rem;
+            font-weight: 800;
+            margin: 10px 0 20px 0;
+            color: #38bdf8;
+            min-height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
+            letter-spacing: 2px;
+        }
+
+        .hint-text {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 20px;
+            min-height: 20px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 14px;
+            font-size: 1.2rem;
+            border-radius: 14px;
+            border: 2px solid #334155;
+            background-color: #0f172a;
+            color: #ffffff;
+            text-align: center;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.15);
+        }
+
+        .btn {
+            width: 100%;
+            margin-top: 15px;
+            padding: 14px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 14px;
+            border: none;
+            background-color: #38bdf8;
+            color: #0f172a;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background-color: #7dd3fc;
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .feedback {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            min-height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .correct {
+            color: #4ade80;
+        }
+
+        .wrong {
+            color: #f87171;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid #334155;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .score-val {
+            color: #f8fafc;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div id="modeBadge" class="mode-badge">KİRİL ALFABESİ</div>
+    <div id="cyrillic" class="cyrillic-display">А</div>
+    <div id="hintText" class="hint-text">Harfin okunuşunu yazın (örn: a)</div>
+    
+    <input type="text" id="userInput" placeholder="Cevabını buraya yaz..." autocomplete="off" autofocus>
+    <button class="btn" onclick="checkAnswer()">Kontrol Et</button>
+
+    <div id="feedback" class="feedback"></div>
+
+    <div class="stats-bar">
+        <div>Skor: <span id="score" class="score-val">0</span></div>
+        <div>Seri: <span id="streak" class="score-val">0 🔥</span></div>
+    </div>
+</div>
+
+<script>
+    const dataset = [
+        // Harfler
+        { cyr: 'А а', ans: ['a'], type: 'Harf', hint: 'Türkçedeki "A" gibi okunur' },
+        { cyr: 'Б б', ans: ['b'], type: 'Harf', hint: 'Türkçedeki "B" gibi okunur' },
+        { cyr: 'В в', ans: ['v'], type: 'Harf', hint: 'Görüntüsü Vazo\'nun V\'sidir' },
+        { cyr: 'Г г', ans: ['g'], type: 'Harf', hint: 'Türkçedeki "G" gibi okunur' },
+        { cyr: 'Д д', ans: ['d'], type: 'Harf', hint: 'Türkçedeki "D" gibi okunur' },
+        { cyr: 'Е е', ans: ['ye', 'e'], type: 'Harf', hint: '"Ye" veya "E" şeklinde okunur' },
+        { cyr: 'Ё ё', ans: ['yo'], type: 'Harf', hint: '"Yo" şeklinde okunur' },
+        { cyr: 'Ж ж', ans: ['j'], type: 'Harf', hint: 'Türkçedeki "J" sesi' },
+        { cyr: 'З з', ans: ['z'], type: 'Harf', hint: '3 rakamına benzer, "Z" sesidir' },
+        { cyr: 'И и', ans: ['i'], type: 'Harf', hint: 'Ters N harfi "İ" sesidir' },
+        { cyr: 'Й й', ans: ['y'], type: 'Harf', hint: 'Kısa "Y" sesi' },
+        { cyr: 'К к', ans: ['k'], type: 'Harf', hint: 'Türkçedeki "K" gibi' },
+        { cyr: 'Л л', ans: ['l'], type: 'Harf', hint: 'Çatı şeklindeki "L" harfi' },
+        { cyr: 'М м', ans: ['m'], type: 'Harf', hint: 'Türkçedeki "M" gibi' },
+        { cyr: 'Н н', ans: ['n'], type: 'Harf', hint: 'H harfine benzer ama "N" sesidir' },
+        { cyr: 'О о', ans: ['o', 'a'], type: 'Harf', hint: 'Vurguluysa O, vurgusuzsa A okunur' },
+        { cyr: 'П п', ans: ['p'], type: 'Harf', hint: 'Kapı şeklindeki "P" harfi' },
+        { cyr: 'Р р', ans: ['r'], type: 'Harf', hint: 'P harfine benzer ama "R" sesidir' },
+        { cyr: 'С с', ans: ['s'], type: 'Harf', hint: 'C harfine benzer ama "S" sesidir' },
+        { cyr: 'Т т', ans: ['t'], type: 'Harf', hint: 'Türkçedeki "T" gibi' },
+        { cyr: 'У у', ans: ['u'], type: 'Harf', hint: 'Y harfine benzer ama "U" sesidir' },
+        { cyr: 'Ф ф', ans: ['f'], type: 'Harf', hint: 'Türkçedeki "F" sesi' },
+        { cyr: 'Х х', ans: ['h'], type: 'Harf', hint: 'Boğazdan hırıltılı "H" sesi' },
+        { cyr: 'Ц ц', ans: ['ts'], type: 'Harf', hint: 'Pizza derken çıkan "TS" sesi' },
+        { cyr: 'Ч ч', ans: ['ç', 'c'], type: 'Harf', hint: '4 rakamına benzer, "Ç" sesidir' },
+        { cyr: 'Ш ш', ans: ['ş', 's'], type: 'Harf', hint: 'Kalın "Ş" sesi' },
+        { cyr: 'Щ щ', ans: ['şç', 'sc'], type: 'Harf', hint: 'Yumuşak "ŞÇ" sesi' },
+        { cyr: 'Ы ы', ans: ['ı', 'i'], type: 'Harf', hint: 'Türkçedeki "I" sesi' },
+        { cyr: 'Э э', ans: ['e'], type: 'Harf', hint: 'Açık "E" sesi' },
+        { cyr: 'Ю ю', ans: ['yu'], type: 'Harf', hint: '"Yu" şeklinde okunur' },
+        { cyr: 'Я я', ans: ['ya'], type: 'Harf', hint: 'Ters R harfi "YA" sesidir' },
+        
+        // Mini Kelimeler
+        { cyr: 'МАМА', ans: ['mama'], type: 'Kelime Pratiği', hint: 'Anlamı: Anne' },
+        { cyr: 'ПАПА', ans: ['papa'], type: 'Kelime Pratiği', hint: 'Anlamı: Baba' },
+        { cyr: 'КОТ', ans: ['kot'], type: 'Kelime Pratiği', hint: 'Anlamı: Erkek Kedi' },
+        { cyr: 'ПАРК', ans: ['park'], type: 'Kelime Pratiği', hint: 'Anlamı: Park' },
+        { cyr: 'МОСКВА', ans: ['maskva', 'moskva'], type: 'Kelime Pratiği', hint: 'Anlamı: Moskova' },
+        { cyr: 'ДА', ans: ['da'], type: 'Kelime Pratiği', hint: 'Anlamı: Evet' },
+        { cyr: 'НЕТ', ans: ['nyet', 'net'], type: 'Kelime Pratiği', hint: 'Anlamı: Hayır' },
+        { cyr: 'СПАСИБО', ans: ['spasiba', 'spasibo'], type: 'Kelime Pratiği', hint: 'Anlamı: Teşekkürler' }
+    ];
+
+    const praises = [
+        "Aferin sana! 🎉",
+        "Süper gidiyorsun! 🔥",
+        "Harika, tam doğru! 👏",
+        "Aynen öyle! 💪",
+        "Mükemmel! 🚀",
+        "İşte bu kadar! ⭐"
+    ];
+
+    let currentIdx = 0;
+    let score = 0;
+    let streak = 0;
+
+    function getRandomQuestion() {
+        currentIdx = Math.floor(Math.random() * dataset.length);
+        const q = dataset[currentIdx];
+        
+        document.getElementById('modeBadge').innerText = q.type.toUpperCase();
+        document.getElementById('cyrillic').innerText = q.cyr;
+        document.getElementById('hintText').innerText = q.hint;
+        document.getElementById('userInput').value = '';
+        document.getElementById('userInput').focus();
+    }
+
+    function checkAnswer() {
+        const input = document.getElementById('userInput').value.trim().toLowerCase();
+        const feedback = document.getElementById('feedback');
+        const correctAnswers = dataset[currentIdx].ans;
+
+        if (input === '') return;
+
+        if (correctAnswers.includes(input)) {
+            const randomPraise = praises[Math.floor(Math.random() * praises.length)];
+            feedback.innerText = randomPraise;
+            feedback.className = "feedback correct";
+            score += 10;
+            streak += 1;
+            document.getElementById('score').innerText = score;
+            document.getElementById('streak').innerText = streak + " 🔥";
+            setTimeout(() => {
+                feedback.innerText = '';
+                getRandomQuestion();
+            }, 1000);
+        } else {
+            feedback.innerText = "Yanlış! Doğrusu: " + correctAnswers[0].toUpperCase();
+            feedback.className = "feedback wrong";
+            streak = 0;
+            document.getElementById('streak').innerText = "0 🔥";
+        }
+    }
+
+    document.getElementById('userInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            checkAnswer();
+        }
+    });
+
+    getRandomQuestion();
+</script>
+
+</body>
+</html>
